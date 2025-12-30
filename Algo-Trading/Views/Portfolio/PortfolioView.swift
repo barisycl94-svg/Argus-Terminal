@@ -1,4 +1,10 @@
-import SwiftUI
+// MARK: - Helper for Scroll Offset
+struct ViewOffsetKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value += nextValue()
+    }
+}
 
 struct PortfolioView: View {
     @ObservedObject var viewModel: TradingViewModel
@@ -11,6 +17,9 @@ struct PortfolioView: View {
     @State private var showModelInfo = false
     @State private var selectedEntityForInfo: ArgusSystemEntity = .corse // Default
     
+    // Scroll Tracking
+    @State private var scrollOffset: CGFloat = 0
+    
     enum AutoPilotEngineFilter: String, CaseIterable {
         case all = "Genel Bakış"
         case corse = "Corse (Swing)"
@@ -18,15 +27,99 @@ struct PortfolioView: View {
         case scouting = "Gözcü (Canlı)"
     }
     
+    // Constants for collapsing logic
+    private let maxHeaderHeight: CGFloat = 320 // Balance + Reports + Padding
+    private let minHeaderHeight: CGFloat = 110 // Selector + Compact Balance
+    
     var body: some View {
         NavigationView {
-            ZStack {
-                // Background removed to reveal ArgusGlobalBackground
-                // Theme.background.ignoresSafeArea()
+            ZStack(alignment: .top) {
+                // Background
+                // Theme.background.ignoresSafeArea() -> Using ArgusGlobalBackground via parent or ZStack below
                 Color.clear
                 
+                // 1. SCROLLABLE CONTENT
+                ScrollView(showsIndicators: false) {
+                    // Spacer to push content down by the current visible header height
+                    // We use a GeometryReader proxy or just a fixed spacer that matches 'maxHeaderHeight' initially
+                    // but visual effect works better if we pad the content top.
+                    
+                    VStack(spacing: 16) {
+                        Spacer().frame(height: maxHeaderHeight)
+                        
+                        // New Scroll Reader Component
+                        GeometryReader { proxy in
+                            Color.clear.preference(
+                                key: ViewOffsetKey.self,
+                                value: -proxy.frame(in: .named("scroll")).origin.y
+                            )
+                        }
+                        .frame(height: 0)
+                        
+                        // PORTFOLIO CONTENT
+                        if selectedEngine == .all {
+                            // ... (Same Content Logic)
+                            if !viewModel.portfolio.isEmpty {
+                                ForEach(viewModel.portfolio.filter { $0.isOpen }) { trade in
+                                    PortfolioCard(
+                                        trade: trade,
+                                        selectedTrade: $selectedTrade,
+                                        viewModel: viewModel,
+                                        onInfoTap: { engine in mapAndShowInfo(engine) }
+                                    )
+                                }
+                            } else {
+                                EmptyPortfolioState()
+                            }
+                        } else if selectedEngine == .scouting {
+                            // Scouting Logic
+                            if !viewModel.scoutLogs.isEmpty {
+                                VStack(alignment: .leading, spacing: 16) {
+                                    Text("Son Taramalar")
+                                        .font(.headline)
+                                        .foregroundColor(Theme.textPrimary)
+                                        .padding(.horizontal)
+                                    
+                                    ForEach(viewModel.scoutLogs.sorted(by: { $0.timestamp > $1.timestamp }), id: \.id) { log in
+                                        ScoutHistoryRow(log: log)
+                                    }
+                                }
+                            } else {
+                                EmptyScoutState()
+                            }
+                        } else {
+                            // Filtered View
+                            let targetEngine: AutoPilotEngine? = (selectedEngine == .corse) ? .corse : .pulse
+                            let filtered = viewModel.portfolio.filter { $0.engine == targetEngine && $0.isOpen }
+                            
+                            if !filtered.isEmpty {
+                                ForEach(filtered) { trade in
+                                    PortfolioCard(
+                                        trade: trade,
+                                        selectedTrade: $selectedTrade,
+                                        viewModel: viewModel,
+                                        onInfoTap: { engine in mapAndShowInfo(engine) }
+                                    )
+                                }
+                            } else {
+                                Text("\(selectedEngine.rawValue) motorunda açık işlem yok.")
+                                    .foregroundColor(Theme.textSecondary)
+                                    .padding(.top, 40)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 100)
+                }
+                .coordinateSpace(name: "scroll")
+                .onPreferenceChange(ViewOffsetKey.self) { value in
+                    // Clamp offset tracking
+                    self.scrollOffset = value
+                }
+                
+                // 2. DYNAMIC HEADER (Overlay)
                 VStack(spacing: 0) {
-                    // Top Bar with History Button
+                    // Top Bar (History)
                     HStack {
                         Spacer()
                         Button(action: { showHistory = true }) {
@@ -39,105 +132,56 @@ struct PortfolioView: View {
                             .foregroundColor(Theme.textSecondary)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .background(Theme.cardBackground)
-                            .cornerRadius(12)
+                            .background(Theme.cardBackground.opacity(0.8))
+                            .clipShape(Capsule())
                         }
                         .padding(.trailing)
                     }
-                    .padding(.top, 8)
+                    .padding(.vertical, 8)
+                    .background(Theme.background.opacity(getOpacityForStandardHeader())) // Fade in bg when scrolling
                     
-                    // 1. Header Area (Portfolio Summary) - COMPACT
-                    PortfolioHeader(viewModel: viewModel)
-                        .padding(.top, 0)
-                        .padding(.bottom, 4)
-                    
-                    // 1.5 Reports Area - COMPACT
-                    PortfolioReportsView(viewModel: viewModel)
-                        .padding(.bottom, 8)
-                    
-                    // 2. Engine Selector - COMPACT
-                    EngineSelector(selected: $selectedEngine)
-                        .padding(.horizontal)
-                        .padding(.bottom, 8)
-                    
-                    // 3. Trade List
-                    ScrollView {
-                        LazyVStack(spacing: 16) {
-                            if selectedEngine == .all {
-                                // Combined View
-                                if !viewModel.portfolio.isEmpty {
-                                    // Active Section
-                                    ForEach(viewModel.portfolio.filter { $0.isOpen }) { trade in
-                                        PortfolioCard(
-                                            trade: trade,
-                                            selectedTrade: $selectedTrade,
-                                            viewModel: viewModel,
-                                            onInfoTap: { engine in
-                                                mapAndShowInfo(engine)
-                                            }
-                                        )
-                                    }
-                                } else {
-                                    EmptyPortfolioState()
-                                }
-                            } else if selectedEngine == .scouting {
-                                // Scouting (Live Signals & Logs)
-                                
-                                if !viewModel.scoutLogs.isEmpty {
-                                    VStack(alignment: .leading, spacing: 16) {
-                                        Text("Son Taramalar")
-                                            .font(.headline)
-                                            .foregroundColor(Theme.textPrimary)
-                                            .padding(.horizontal)
-                                            .padding(.top)
-                                        
-                                        ForEach(viewModel.scoutLogs.sorted(by: { $0.timestamp > $1.timestamp }), id: \.id) { log in
-                                            ScoutHistoryRow(log: log)
-                                                .padding(.horizontal)
-                                        }
-                                    }
-                                } else {
-                                    VStack(spacing: 16) {
-                                        Image(systemName: "binoculars.fill")
-                                            .font(.system(size: 48))
-                                            .foregroundColor(Theme.textSecondary.opacity(0.3))
-                                        Text("Gözcü Taraması Bekleniyor...")
-                                            .font(.headline)
-                                            .foregroundColor(Theme.textSecondary)
-                                        Text("Henüz bir analiz günlüğü oluşmadı.")
-                                            .font(.caption)
-                                            .foregroundColor(Theme.textSecondary)
-                                    }
-                                    .padding(.top, 40)
-                                }
-                                
-                            } else {
-                                // Filtered View
-                                let targetEngine: AutoPilotEngine? = (selectedEngine == .corse) ? .corse : .pulse
-                                let filtered = viewModel.portfolio.filter { $0.engine == targetEngine && $0.isOpen }
-                                
-                                if !filtered.isEmpty {
-                                    ForEach(filtered) { trade in
-                                        PortfolioCard(
-                                            trade: trade,
-                                            selectedTrade: $selectedTrade,
-                                            viewModel: viewModel,
-                                            onInfoTap: { engine in
-                                                mapAndShowInfo(engine)
-                                            }
-                                        )
-                                    }
-                                } else {
-                                    Text("\(selectedEngine.rawValue) motorunda açık işlem yok.")
-                                        .foregroundColor(Theme.textSecondary)
-                                        .padding(.top, 40)
-                                }
-                            }
+                    // Collapsible Content
+                    VStack(spacing: 0) {
+                        // Balance Card
+                        // Scale down and fade out as we scroll
+                        let balanceScale = max(0.8, 1.0 - (scrollOffset / 300.0))
+                        let balanceOpacity = max(0.0, 1.0 - (scrollOffset / 150.0))
+                        
+                        if balanceOpacity > 0.1 {
+                            PortfolioHeader(viewModel: viewModel)
+                                .scaleEffect(balanceScale)
+                                .opacity(balanceOpacity)
+                                .frame(height: 180 * balanceOpacity) // Collapse height
+                                .clipped()
                         }
-                        .padding(.horizontal)
-                        .padding(.bottom, 100)
+                        
+                        // Reports
+                        let reportsOpacity = max(0.0, 1.0 - (scrollOffset / 100.0))
+                        if reportsOpacity > 0.1 {
+                            PortfolioReportsView(viewModel: viewModel)
+                                .opacity(reportsOpacity)
+                                .frame(height: 60 * reportsOpacity)
+                                .clipped()
+                                .padding(.bottom, 8)
+                        }
+                        
+                        // Engine Selector (Sticky-ish)
+                        // Always visible but maybe compact background
+                        EngineSelector(selected: $selectedEngine)
+                            .padding(.horizontal)
+                            .padding(.bottom, 8)
+                            .background(
+                                Theme.background
+                                    .opacity(scrollOffset > 50 ? 0.95 : 0.0)
+                                    .blur(radius: 10)
+                            )
                     }
                 }
+                .background(
+                    Theme.background
+                        .opacity(scrollOffset > 100 ? 0.8 : 0.0)
+                        .edgesIgnoringSafeArea(.top)
+                )
                 
                 // FAB
                 VStack {
@@ -153,11 +197,12 @@ struct PortfolioView: View {
                                 .background(Theme.tint)
                                 .clipShape(Circle())
                                 .shadow(color: Theme.tint.opacity(0.4), radius: 10, x: 0, y: 5)
-                            }
+                        }
                         .padding()
                     }
                 }
-                // Model Info Card Overlay
+                
+                // Model Info Overlay
                 if showModelInfo {
                     SystemInfoCard(entity: selectedEntityForInfo, isPresented: $showModelInfo)
                         .zIndex(100)
@@ -166,7 +211,7 @@ struct PortfolioView: View {
             .navigationBarHidden(true)
             .sheet(isPresented: $showNewTradeSheet) {
                 NewTradeSheet(viewModel: viewModel)
-                    .presentationDetents([.fraction(0.6)]) // Manage height better
+                    .presentationDetents([.fraction(0.6)])
             }
             .sheet(item: $selectedTrade) { trade in
                 TradeDetailSheet(trade: trade, viewModel: viewModel)
@@ -175,13 +220,18 @@ struct PortfolioView: View {
                 TransactionHistorySheet(viewModel: viewModel)
             }
             .onAppear {
-                // Ensure Aether is fresh when viewing Portfolio
                 Task {
                     _ = await MacroRegimeService.shared.computeMacroEnvironment()
                 }
             }
         }
     }
+    
+    private func getOpacityForStandardHeader() -> Double {
+        let opacity = min(1.0, scrollOffset / 150.0)
+        return opacity
+    }
+    
     private func mapAndShowInfo(_ engine: AutoPilotEngine) {
         switch engine {
         case .corse: selectedEntityForInfo = .corse
@@ -193,8 +243,25 @@ struct PortfolioView: View {
         withAnimation { showModelInfo = true }
     }
 }
+// Helper View for Empty Scout
+struct EmptyScoutState: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "binoculars.fill")
+                .font(.system(size: 48))
+                .foregroundColor(Theme.textSecondary.opacity(0.3))
+            Text("Gözcü Taraması Bekleniyor...")
+                .font(.headline)
+                .foregroundColor(Theme.textSecondary)
+            Text("Henüz bir analiz günlüğü oluşmadı.")
+                .font(.caption)
+                .foregroundColor(Theme.textSecondary)
+        }
+        .padding(.top, 40)
+    }
+}
 
-// MARK: - History Sheet
+// REST OF FILE (TransactionHistorySheet, etc.) remains unchanged
 struct TransactionHistorySheet: View {
     @ObservedObject var viewModel: TradingViewModel
     @Environment(\.presentationMode) var presentationMode
