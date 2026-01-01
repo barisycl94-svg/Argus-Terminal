@@ -1,0 +1,29 @@
+{
+  "name": "Argus Terminal",
+  "short_name": "Argus",
+  "description": "Gelişmiş Kripto Analiz ve Otomatik Trading Platformu",
+  "theme_color": "#0a0a0f",
+  "background_color": "#050505",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "orientation": "any",
+  "categories": [
+    "finance",
+    "business"
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

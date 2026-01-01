@@ -1,0 +1,233 @@
+/* Market View Styles */
+
+.market-view {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-bottom: 120px; /* Space for bottom nav */
+}
+
+/* Market Header */
+.market-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+    flex-wrap: wrap;
+}
+
+.market-header h1 {
+    font-size: 1.75rem;
+    margin: 0;
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Search */
+.search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 400px;
+}
+
+.search-box svg {
+    position: absolute;
+    left: var(--space-md);
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.search-box input {
+    width: 100%;
+    padding: var(--space-sm) var(--space-md) var(--space-sm) 40px;
+    background: var(--bg-nebula);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-pill);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: all var(--transition-fast);
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: var(--cyber-blue);
+    box-shadow: 0 0 0 2px rgba(0, 168, 255, 0.2);
+}
+
+/* Crypto Grid */
+.crypto-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-md);
+}
+
+.crypto-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+    text-decoration: none;
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.crypto-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--cyber-blue);
+    box-shadow: var(--shadow-glow-blue);
+    background: var(--bg-card-hover);
+}
+
+/* Card Header */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+}
+
+.symbol-info {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.symbol {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.pair {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Star Button */
+.star-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: var(--text-muted);
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.star-btn:hover {
+    transform: scale(1.1);
+    color: var(--gold);
+}
+
+.star-btn.active {
+    color: var(--gold);
+    filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
+}
+
+/* Price Info */
+.price-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+}
+
+.price {
+    font-size: 1.5rem;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+}
+
+.change {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+}
+
+.change.positive {
+    background: rgba(0, 255, 163, 0.1);
+    color: var(--positive);
+    border: 1px solid rgba(0, 255, 163, 0.2);
+}
+
+.change.negative {
+    background: rgba(255, 46, 85, 0.1);
+    color: var(--negative);
+    border: 1px solid rgba(255, 46, 85, 0.2);
+}
+
+/* Volume Info */
+.volume-info {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-subtle);
+    padding-top: var(--space-sm);
+    margin-top: auto;
+}
+
+/* Loading Grid */
+.loading-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-md);
+}
+
+.skeleton-card {
+    height: 160px;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: var(--space-xl);
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px dashed var(--border-subtle);
+}
+
+/* Animations */
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 0.3; }
+    100% { opacity: 0.6; }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .market-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .search-box {
+        max-width: 100%;
+    }
+    
+    .crypto-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .price {
+        font-size: 1.25rem;
+    }
+}

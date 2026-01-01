@@ -1,0 +1,123 @@
+.order-book-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+    height: 100%;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.order-book-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+}
+
+.ob-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.ob-header h3 {
+    font-size: 1rem;
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+.ob-spread {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.ob-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+}
+
+.ob-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    padding: 2px 4px;
+    position: relative;
+    z-index: 1;
+}
+
+.ob-row.header {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin-bottom: 4px;
+}
+
+.ob-row span {
+    z-index: 2;
+}
+
+.ob-row .price {
+    text-align: left;
+    font-weight: 600;
+}
+
+.ob-row .qty {
+    text-align: right;
+    color: var(--text-secondary);
+}
+
+.ob-row .total {
+    text-align: right;
+    color: var(--text-muted);
+}
+
+.ob-side.asks .ob-row .price {
+    color: var(--negative);
+}
+
+.ob-side.bids .ob-row .price {
+    color: var(--positive);
+}
+
+.bg-bar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+    opacity: 0.15;
+    transition: width 0.3s ease;
+}
+
+.ob-side.asks .bg-bar {
+    background-color: var(--negative);
+}
+
+.ob-side.bids .bg-bar {
+    background-color: var(--positive);
+}
+
+.ob-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-sm) 0;
+    margin: var(--space-xs) 0;
+    border-top: 1px dashed var(--border-subtle);
+    border-bottom: 1px dashed var(--border-subtle);
+}
+
+.current-price {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--gold);
+}

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f"/>
+      <stop offset="100%" style="stop-color:#1a1a2e"/>
+    </linearGradient>
+    <linearGradient id="eyeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00f3ff"/>
+      <stop offset="100%" style="stop-color:#00ff9d"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="192" height="192" rx="40" fill="url(#bgGrad)"/>
+  
+  <!-- Outer ring -->
+  <circle cx="96" cy="96" r="70" fill="none" stroke="url(#eyeGrad)" stroke-width="3" opacity="0.3"/>
+  
+  <!-- Eye shape (Argus all-seeing eye) -->
+  <ellipse cx="96" cy="96" rx="50" ry="35" fill="none" stroke="url(#eyeGrad)" stroke-width="4" filter="url(#glow)"/>
+  
+  <!-- Iris -->
+  <circle cx="96" cy="96" r="25" fill="none" stroke="#00f3ff" stroke-width="3"/>
+  
+  <!-- Pupil -->
+  <circle cx="96" cy="96" r="12" fill="#00f3ff"/>
+  
+  <!-- Inner glow -->
+  <circle cx="96" cy="96" r="8" fill="#fff" opacity="0.8"/>
+  
+  <!-- Scan lines -->
+  <line x1="46" y1="96" x2="66" y2="96" stroke="#00ff9d" stroke-width="2" opacity="0.6"/>
+  <line x1="126" y1="96" x2="146" y2="96" stroke="#00ff9d" stroke-width="2" opacity="0.6"/>
+  
+  <!-- Corner brackets -->
+  <path d="M30 50 L30 30 L50 30" fill="none" stroke="#ffd700" stroke-width="2" opacity="0.5"/>
+  <path d="M142 30 L162 30 L162 50" fill="none" stroke="#ffd700" stroke-width="2" opacity="0.5"/>
+  <path d="M162 142 L162 162 L142 162" fill="none" stroke="#ffd700" stroke-width="2" opacity="0.5"/>
+  <path d="M50 162 L30 162 L30 142" fill="none" stroke="#ffd700" stroke-width="2" opacity="0.5"/>
+</svg>
